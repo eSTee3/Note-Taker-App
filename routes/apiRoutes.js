@@ -1,74 +1,42 @@
-// Dependencies
-const fs = require("fs");
+const router = require('express').Router();
 
-// imported 'uuid' npm package for unique id
-const { v4: uuidv4 } = require('uuid');
+const store = require('../db/store');
 
-// ROUTING
-module.exports = function (app) {
+// requesting the existing notes
 
-    // API GET Request
-    app.get("/api/notes", (request, response) => {
-        
-        console.log("\n\nExecuting GET notes request");
+router.get('./notes', (req, res) => {
+    store
+        .getNotes()
+        .then(notes => {
+            res.json(notes)
+        })
+        .catch(err => {
+            res.status(500).json(err)
+        })
+})
 
-        // Read 'db.json' file 
-        let data = JSON.parse(fs.readFileSync("./Develop/db/db.json", "utf8"));
-        
-        console.log("\nGET request - Returning notes data: " + JSON.stringify(data));
-        
-        // Send read data to response of 'GET' request
-        response.json(data);
-    });
+// posting note function route 
 
-
-    // API POST Request
-    app.post("/api/notes", (request, response) => {
-
-        // Extracted new note from request body.  
-        const newNote = request.body;
-        
-        console.log("\n\nPOST request - New Note : " + JSON.stringify(newNote));
-
-        // Assigned unique id obtained from 'uuid' package
-        newNote.id = uuidv4();
-
-        // Read data from 'db.json' file
-        let data = JSON.parse(fs.readFileSync("./Develop/db/db.json", "utf8"));
-    
-        // Pushed new note in notes file 'db.json'
-        data.push(newNote);
-
-        // Written notes data to 'db.json' file
-        fs.writeFileSync('./Develop/db/db.json', JSON.stringify(data));
-        
-        console.log("\nSuccessfully added new note to 'db.json' file!");
-
-        // Send response
-        response.json(data);
-    });
+router.post('./notes', (req, res) => {
+    console.log(req.body)
+    store
+        .addNote(req.body)
+        .then(note => {
+            res.json(note)
+        })
+        .catch(err => {
+            res.status(500).json(err)
+        })
+})
 
 
-    // API DELETE request
-    app.delete("/api/notes/:id", (request, response) => {
+// delete note function route
 
-        // Fetched id to delete
-        let noteId = request.params.id.toString();
-        
-        console.log(`\n\nDELETE note request for noteId: ${noteId}`);
+router.delete('./notes/:id', (req, res) => {
+    store
+        .removeNote(req.params.id)
+        .then(() => res.json({ ok: true }))
+        .catch(err => res.status(500).json(err))
+})
 
-        // Read data from 'db.json' file
-        let data = JSON.parse(fs.readFileSync("./Develop/db/db.json", "utf8"));
-
-        // filter data to get notes except the one to delete
-        const newData = data.filter( note => note.id.toString() !== noteId );
-
-        // Write new data to 'db.json' file
-        fs.writeFileSync('./Develop/db/db.json', JSON.stringify(newData));
-        
-        console.log(`\nSuccessfully deleted note with id : ${noteId}`);
-
-        // Send response
-        response.json(newData);
-    });
-};
+module.exports = router;
