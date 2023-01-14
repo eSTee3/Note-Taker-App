@@ -7,9 +7,4 @@ router.get('/notes', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/notes.html'))
 })
 
-// Send user back to the home page if there's an issue
-router.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'))
-})
-
 module.exports = router;
